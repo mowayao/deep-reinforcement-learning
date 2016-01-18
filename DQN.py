@@ -11,6 +11,11 @@ class DDQN():
 		self.OnlineNetwork = network
 		self.TargetNetwork = network
 		self.valid_actions = valid_actions
+		self.num_valid_actions = len(valid_actions)
+	def choose_action(self,phi):
+		res = self.predict(phi)
+		return np.argmax(res)
+
 	def train(self,phi1,phi2,act,reward,terminals):
 
 
@@ -27,9 +32,22 @@ class DDQN():
 		#print "loss:",self.OnlineNetwork.evaluate(phi1,pre1)
 		#print "average Q value:",np.mean(pre1)
 	def predict(self,phi):
-		
-		return self.vaself.TargetNetwork.predict(phi)
+			
+		return self.TargetNetwork.predict(phi)
 
 	def update(self):
 		print "update target"
 		self.TargetNetwork = copy.deepcopy(self.OnlineNetwork)
+
+
+#TODO
+class DQN:
+	def __init__(self):
+		pass
+
+#TODO
+class Dueling:
+	def __init__(self):
+		pass
+
+
