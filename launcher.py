@@ -9,6 +9,7 @@ import argparse
 from DQN import DDQN
 from defaults import defaults
 from ale_python_interface import ALEInterface
+from MemoryReplay import ReplayMemory
 import numpy as np 
 import logging
 import os
@@ -73,13 +74,12 @@ def launch():
 	ale.setInt('frame_skip',myArgs.frame_skip)
 	ale.setFloat('repeat_action_probability',myArgs.repeat_action_probability)
 	ale.loadROM(full_rom_path)
+
 	valid_actions = ale.getMinimalActionSet()
-	
-
+	memory_pool = ReplayMemory(myArgs.memory_size,rng)
 	network_model = buildNetwork(myArgs.resized_height,myArgs.resized_width,myArgs.rmsp_epsilon,myArgs.rmsp_rho,myArgs.learning_rate,len(valid_actions))
-	ddqn = DDQN(network_model,valid_actions)
+	ddqn = DDQN(myArgs,network_model,memory_pool,valid_actions)
 
-	
-	
+
 if __name__=="__main__":
 	launch()
