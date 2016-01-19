@@ -13,6 +13,8 @@ from MemoryReplay import ReplayMemory
 import numpy as np 
 import logging
 import os
+from Agent import Agent
+from train import TrainMyAgent
 def getParameters():
 	myParser = argparse.ArgumentParser()
 	myParser.add_argument("-epsilon_start", type=float, default=defaults.epsilon_start)
@@ -28,7 +30,7 @@ def getParameters():
 	myParser.add_argument("-display_screen", type=bool, default=defaults.display_screen)
 	myParser.add_argument("-frame_skip", type=int, default=defaults.frame_skip)
 	myParser.add_argument("-epsilon_decay", type=int, default=defaults.epsilon_decay)
-	myParser.add_argument("-epoch_num", type=int, default=defaults.epoch_num)
+	myParser.add_argument("-num_epoch", type=int, default=defaults.epoch_num)
 	myParser.add_argument("-steps_per_test", type=int, default=defaults.steps_per_test)
 	myParser.add_argument("-steps_per_epoch", type=int, default=defaults.steps_per_epoch)
 	myParser.add_argument("-batch_size", type=int, default=defaults.batch_size)
@@ -41,7 +43,10 @@ def getParameters():
 	myParser.add_argument("-update_frequency",type=int,default=defaults.update_frequency)
 	myParser.add_argument("-target_nn_update_frequency",type=int,default=defaults.target_nn_update_frequency)
 	myParser.add_argument("-repeat_action_probability",type=float,default=defaults.repeat_action_probability)
+	myParser.add_argument("-death_end_episode",type=bool,default=defaults.death_end_episode)
+	myParser.add_argument("-buffer_size",type=int,default=defaults.buffer_size)
 	args = myParser.parse_args()
+
 	return args
 
 def buildNetwork(height,width,rmsp_epsilon,rmsp_rho,learning_rate,num_valid_action):
@@ -73,13 +78,28 @@ def launch():
 	ale.setBool('display_screen',myArgs.display_screen)
 	ale.setInt('frame_skip',myArgs.frame_skip)
 	ale.setFloat('repeat_action_probability',myArgs.repeat_action_probability)
-	ale.loadROM(full_rom_path)
 
+	ale.loadROM(full_rom_path)
 	valid_actions = ale.getMinimalActionSet()
+	'''for episode in xrange(10):
+		total_reward = 0
+		while not ale.game_over():
+			from random import randrange
+			a = valid_actions[randrange(len(valid_actions))]
+			ale.act(a)
+			#print reward
+			#print ale.getScreenRGB()
+
+			#total_reward += reward
+			#print 'Episode', episode, 'ended with score:', total_reward
+		ale.reset_game()
+	'''
 	memory_pool = ReplayMemory(myArgs.memory_size,rng)
 	network_model = buildNetwork(myArgs.resized_height,myArgs.resized_width,myArgs.rmsp_epsilon,myArgs.rmsp_rho,myArgs.learning_rate,len(valid_actions))
-	ddqn = DDQN(myArgs,network_model,memory_pool,valid_actions)
-
+	ddqn = DDQN(network_model,valid_actions)
+	agent = Agent(myArgs,ddqn,memory_pool,valid_actions,rng)
+	train_agent = TrainMyAgent(myArgs,ale,agent,valid_actions,rng)
+	train_agent.run()
 
 if __name__=="__main__":
 	launch()

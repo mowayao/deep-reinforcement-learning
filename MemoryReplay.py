@@ -25,7 +25,6 @@ class ReplayMemory():
 			idx = rng.randint(0,self.MSize)
 			self.__setMemory(idx,phi,action,reward,phis,terminal)
 	def stochasticSample(self,batch_size):
-		#prob = np.asarray(self.weights,dtype='float64')/sum(self.weights)
 		expIdx = np.random.choice(range(self.curSz),size=batch_size,replace=False)
 		phi = [self.f['phi'][idx] for idx in expIdx]
 		action = [self.f['action'][idx] for idx in expIdx]

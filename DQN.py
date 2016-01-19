@@ -6,7 +6,7 @@ double deep Q-learning network
 based on keras,a python-based deep neural network framework
 '''
 
-class DDQN():
+class DDQN:
 	def __init__(self,network,valid_actions):
 		self.OnlineNetwork = network
 		self.TargetNetwork = network

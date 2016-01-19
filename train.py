@@ -71,7 +71,7 @@ class TrainMyAgent:
 	def run_episode(self,num_steps_left,trainable):
 		self.__init_episode()
 		start_lives = self.ale.lives()
-		action = self.agent.start_episode(None)
+		action = self.agent.start_episode(self.__get_phi())
 		step_cnt = 0
 		while True:
 			reward = self.__step(action)
