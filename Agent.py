@@ -5,7 +5,7 @@ game agent
 import logging
 import numpy as np
 import time
-
+import uuid
 class Agent:
 	'''
 
@@ -33,6 +33,34 @@ class Agent:
 		self.epsilon_decay_rate = 0
 		if self.epsilon_decay != 0:
 			self.epsilon_decay_rate = (self.epsilon_start-self.epsilon_min)/self.epsilon_decay 
+		file_id = str(uuid.uuid4())
+		self.training_file_path = self.exps_prefix+"training_results_"+file_id+".csv"
+		self.testing_file_path = self.exps_prefix+"testing_results_"+self.file_id+".csv"
+		self.open_training_result_file()
+		self.open_testing_result_file()
+		
+
+	def open_testing_result_file(self):
+		logging.info("Open"+self.testing_file_path)
+		self.testing_result_file = open(testing_file_path,'w')
+		self.testing_result_file.write('epoch,num_episodes,total_reward,reward_per_episode,mean_qval\n')
+		self.testing_result_file.flush()
+
+	def open_training_result_file(self):
+		logging.info("Open"+self.training_file_path)
+		self.training_result_file = open(self.training_file_path,'w')
+		self.training_result_file.write('mean_loss,epsilon\n')
+		self.training_result_file.flush()
+
+	def update_training_result_file(self,mean_loss,epsilon):
+		res = "{},{}\n".format(mean_loss,epsilon)
+		self.training_result_file.write(res)
+		self.training_result_file.flush()
+
+	def update_testing_result_file(self,epoch,num_episodes,total_reward,reward_per_episode,mean_qval):
+		res = "{},{},{},{},{}".format(epoch,num_episodes,total_reward,reward_per_episode,mean_qval)
+		self.testing_result_file.write(res)
+		self.testing_result_file.flush()
 
 	def step(self,reward,phi,trainable):
 		self.step_cnt += 1
@@ -100,8 +128,9 @@ class Agent:
 		cost_time = time.time()-self.start_time
 		if trainable:
 			if self.batch_cnt > 0:
-				##TODO update files
-				logging.info("average loss: {:.4f}".format(np.mean(self.loss)))
+				mean_loss = np.mean(self.loss)
+				self.update_training_result_file(mean_loss,self.epsilon)
+				logging.info("average loss: {:.4f} and epsilon: {:.4f}".format(mean_loss,self.epsilon))
 			if terminal:
 				self.memory_pool.add_sample(self.last_phi,self.last_action,np.clip(reward,-1,1),self.last_phi,True)
 		else:
@@ -117,12 +146,10 @@ class Agent:
 		self.trainable = True
 		if self.holdout_data is None and self.memory_pool.curSz > self.holdout_data_size:
 			self.holdout_data = self.memory_pool.stochasticSample(self.holdout_data_size)[0]
-
-		qval_sum = 0
+		qval_mean = qval_sum = 0
 		if self.holdout_data is not None:
 			for _ in xrange(self.holdout_data_size):
 				qval_sum += np.max(self.ddqn.predict(self.holdout_data[i]))
-
-
-		#TODO save res
+			qval_mean = qval_sum / self.holdout_data_size
+		self.update_training_result_file(epoch,self.episode_cnt,self.test_reward,float(self.test_reward)/self.episode_cnt,qval_mean)
 
