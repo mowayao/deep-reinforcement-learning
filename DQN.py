@@ -14,7 +14,7 @@ class DDQN:
 		self.num_valid_actions = len(valid_actions)
 	def choose_action(self,phi):
 		res = self.predict(phi)
-		return np.argmax(res)
+		return self.valid_actions[np.argmax(res)]
 
 	def train(self,phi1,phi2,act,reward,terminals):
 
