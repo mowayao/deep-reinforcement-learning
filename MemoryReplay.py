@@ -10,6 +10,7 @@ class ReplayMemory():
 		self.f = h5py.File('../memory.hdf5', 'a')
 		self.curSz = 0 
 		self.MSize = memory_size
+		self.rng = rng
 	def __setMemory(self,idx,phi,action,reward,phis,terminal):
 		#print phi.shape
 		self.f['phi'][idx] = phi
@@ -25,10 +26,10 @@ class ReplayMemory():
 			idx = rng.randint(0,self.MSize)
 			self.__setMemory(idx,phi,action,reward,phis,terminal)
 	def stochasticSample(self,batch_size):
-		expIdx = np.random.choice(range(self.curSz),size=batch_size,replace=False)
+		expIdx = self.rng.choice(range(self.curSz),size=batch_size,replace=False)
 		phi = [self.f['phi'][idx] for idx in expIdx]
 		action = [self.f['action'][idx] for idx in expIdx]
 		reward = [self.f['reward'][idx] for idx in expIdx]
 		phis = [self.f['phis'][idx] for idx in expIdx]
 		terminal = [self.f['terminal'][idx] for idx in expIdx]
-		return phi,action,reward,phis,terminal
+		return phi,action,reward,phis,terminal	

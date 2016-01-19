@@ -112,7 +112,6 @@ class Agent:
 		self.batch_cnt = 0
 		self.episode_reward = 0
 		self.loss = []
-		self.trainable = True
 		self.start_time = time.time()
 		action = self.valid_actions[self.rng.randint(self.num_valid_actions)]
 		self.last_action = action
@@ -130,6 +129,7 @@ class Agent:
 			if self.batch_cnt > 0:
 				mean_loss = np.mean(self.loss)
 				self.update_training_result_file(mean_loss,self.epsilon)
+				logging.info("steps:{},time:{}".format(self.step_cnt,cost_time))
 				logging.info("average loss: {:.4f} and epsilon: {:.4f}".format(mean_loss,self.epsilon))
 			if terminal:
 				self.memory_pool.add_sample(self.last_phi,self.last_action,np.clip(reward,-1,1),self.last_phi,True)
