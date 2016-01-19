@@ -32,13 +32,11 @@ class DDQN:
 		#print "loss:",self.OnlineNetwork.evaluate(phi1,pre1)
 		#print "average Q value:",np.mean(pre1)
 	def predict(self,phi):
-			
 		return self.TargetNetwork.predict(phi)
 
 	def update(self):
 		print "update target"
 		self.TargetNetwork = copy.deepcopy(self.OnlineNetwork)
-
 
 #TODO
 class DQN:

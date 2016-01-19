@@ -17,9 +17,9 @@ class ReplayMemory():
 		self.f['reward'][idx] = reward
 		self.f['phis'][idx] = phis
 		self.f['terminal'][idx] = terminal
-	def store(self,phi,action,reward,phis,terminal):
+	def add_sample(self,phi,action,reward,phis,terminal):
 		if self.curSz < self.MSize:
-			self.__setMemory(self.curSz,phi,action,reward,terminal)
+			self.__setMemory(self.curSz,phi,action,reward,phis,terminal)
 			self.curSz+=1
 		else:
 			idx = rng.randint(0,self.MSize)

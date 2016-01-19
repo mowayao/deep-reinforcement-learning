@@ -28,7 +28,7 @@ class TrainMyAgent:
 			self.run_epoch(_,self.steps_per_epoch,True)
 			self.agent.finish_epoch(_)
 			if self.steps_per_test > 0:
-				self.agent.start_testing(None)
+				self.agent.start_testing()
 				self.run_epoch(_,self.steps_per_test,False)
 				self.agent.finish_test(_)
 
@@ -36,12 +36,14 @@ class TrainMyAgent:
 
 	def run_epoch(self,epoch,num_steps,trainable):
 		num_steps_left = num_steps
+		self.trainable = trainable
 		while num_steps_left > 0:
 			t = "training" if trainable else "testing"
 			info = t+ " on epoch "+str(epoch)+" and "+str(num_steps_left)+" steps left"
 			logging.info(info)
 			_,steps = self.run_episode(num_steps_left,trainable)
 			num_steps_left -= steps
+
 
 	def __init_episode(self):
 		'''
@@ -67,7 +69,9 @@ class TrainMyAgent:
 			reward += self.__act(action)
 		return reward
 	def __get_phi(self):
-		return np.asarray(self.frame_buffer[self.frame_buffer_cnt-3:self.frame_buffer_cnt])
+		from skimage.transform import resize
+		phi = [resize(self.frame_buffer[_],(self.resized_frame_height,self.resized_frame_width)) for _ in xrange(self.frame_buffer_cnt-4,self.frame_buffer_cnt)]
+		return np.asarray(phi)
 	def run_episode(self,num_steps_left,trainable):
 		self.__init_episode()
 		start_lives = self.ale.lives()
@@ -79,16 +83,7 @@ class TrainMyAgent:
 			terminal = self.ale.game_over() or self.flag
 			step_cnt += 1
 			if terminal or step_cnt > num_steps_left:
-				self.agent.finish_episode(reward,terminal)
+				self.agent.finish_episode(reward,terminal,trainable)
 				break
-			action = self.agent.greedy_action(None)
+			action = self.agent.step(reward,self.__get_phi(),trainable)
 		return terminal,step_cnt
-
-
-
-	def get_frame(self):
-		pass
-
-
-	def resize_frame(self):
-		pass

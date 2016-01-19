@@ -5,6 +5,7 @@ game agent
 import logging
 import numpy as np
 import time
+
 class Agent:
 	'''
 
@@ -16,6 +17,8 @@ class Agent:
 		self.epsilon_decay = args.epsilon_decay
 		self.update_frequency = args.update_frequency
 		self.exps_prefix = args.exps_prefix
+		self.phi_len = args.phi_len
+		self.holdout_data_size = args.holdout_data_size
 		self.rng = rng
 		self.ddqn = ddqn
 		self.memory_pool = memory_pool
@@ -34,31 +37,34 @@ class Agent:
 	def step(self,reward,phi,trainable):
 		self.step_cnt += 1
 		if trainable:
-			if(self.memory_pool.curSz > self.replay_start_size):
+			if self.memory_pool.curSz > self.replay_start_size:
 				self.epsilon = max(self.epsilon_min,self.epsilon-self.epsilon_decay_rate)
+				if self.step_cnt % self.update_frequency == 0:
+					self.batch_cnt += 1
+					self.loss.append(self.train_my_model())
 			action = self.greedy_action(phi,self.epsilon,np.clip(reward,-1,1))
-			if self.step_cnt % self.update_frequency == 0:
-				self.batch_cnt += 1
-				self.loss.append(self.train_my_model())
+			
 		else:
 			self.episode_reward += reward
 			action = self.greedy_action(phi,0.05,reward)
-		self.__show_phi(self.last_phi,phi)
+	
+		#self._show_phi(self.last_phi,phi)
 		self.last_phi = phi
 		self.last_action = action
 		return action
-	
-	def __show_phi(self,phi,phis):
+
+	def _show_phi(self,phi,phis):
+		'''
+		This method is to test phi and phis
+		'''
 		import matplotlib.pyplot as plt
-        for p in range(self.phi_length):
-            plt.subplot(2, self.phi_length, p+1)
-            plt.imshow(phi1[p, :, :], interpolation='none', cmap="gray")
-            plt.grid(color='r', linestyle='-', linewidth=1)
-        for p in range(self.phi_length):
-            plt.subplot(2, self.phi_length, p+5)
-            plt.imshow(phi2[p, :, :], interpolation='none', cmap="gray")
-            plt.grid(color='r', linestyle='-', linewidth=1)
-        plt.show()
+		for _ in xrange(self.phi_len):
+			plt.subplot(2,self.phi_len,_+1)
+			plt.imshow(phi[_],interpolation='none',cmap='gray')
+		for _ in xrange(self.phi_len):
+			plt.subplot(2,self.phi_len,_+5)
+			plt.imshow(phis[_],interpolation='none',cmap='gray')
+		plt.show()
 
 
 	def train_my_model(self):
@@ -66,6 +72,7 @@ class Agent:
 		self.ddqn.train(phi,action,reward,phis,terminal)
 
 	def greedy_action(self,phi,epsilon,reward):
+		assert phi.shape[0] == self.phi_len
 		self.memory_pool.add_sample(self.last_phi,self.last_action,reward,phi,False)
 		if self.rng.rand() < epsilon:
 			action = self.valid_actions[self.rng.randint(0,self.num_valid_actions)]
@@ -77,6 +84,7 @@ class Agent:
 		self.batch_cnt = 0
 		self.episode_reward = 0
 		self.loss = []
+		self.trainable = True
 		self.start_time = time.time()
 		action = self.valid_actions[self.rng.randint(self.num_valid_actions)]
 		self.last_action = action
@@ -86,6 +94,35 @@ class Agent:
 	def finish_epoch(self,epoch):
 		self.ddqn.TargetNetwork.save_weights(self.exps_prefix+"model_weight"+str(epoch)+".hdf5")
 		
-	def finish_episode(self,reward,terminal):
-		pass
+	def finish_episode(self,reward,terminal,trainable):
+		self.episode_reward += reward
+		self.step_cnt += 1
+		cost_time = time.time()-self.start_time
+		if trainable:
+			if self.batch_cnt > 0:
+				##TODO update files
+				logging.info("average loss: {:.4f}".format(np.mean(self.loss)))
+			if terminal:
+				self.memory_pool.add_sample(self.last_phi,self.last_action,np.clip(reward,-1,1),self.last_phi,True)
+		else:
+			self.episode_cnt += 1
+			self.test_reward += self.episode_reward
+
+	def start_testing(self):
+		self.trainable = False
+		self.test_reward = 0
+		self.episode_cnt = 0
+
+	def finish_test(self,epoch):
+		self.trainable = True
+		if self.holdout_data is None and self.memory_pool.curSz > self.holdout_data_size:
+			self.holdout_data = self.memory_pool.stochasticSample(self.holdout_data_size)[0]
+
+		qval_sum = 0
+		if self.holdout_data is not None:
+			for _ in xrange(self.holdout_data_size):
+				qval_sum += np.max(self.ddqn.predict(self.holdout_data[i]))
+
+
+		#TODO save res
 
