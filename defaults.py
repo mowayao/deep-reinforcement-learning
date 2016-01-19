@@ -16,6 +16,7 @@ class defaults:
     resized_width = 84
     resized_height = 84
     base_rom_path = "roms/"
+    exps_prefix = "exps/"
     rom = 'breakout.bin'
     frame_skip = 1
     display_screen = True
@@ -29,6 +30,7 @@ class defaults:
     repeat_action_probability = 0.0
     death_end_episode = False
     buffer_size = 200
+    holdout_data_size = 4000
 
 
 	

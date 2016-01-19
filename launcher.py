@@ -45,6 +45,8 @@ def getParameters():
 	myParser.add_argument("-repeat_action_probability",type=float,default=defaults.repeat_action_probability)
 	myParser.add_argument("-death_end_episode",type=bool,default=defaults.death_end_episode)
 	myParser.add_argument("-buffer_size",type=int,default=defaults.buffer_size)
+	myParser.add_argument("-exps_prefix",type=str,default=defaults.exps_prefix)
+	myParser.add_argument("-holdout_data_size",type=int,default=defaults.holdout_data_size)
 	args = myParser.parse_args()
 
 	return args
@@ -96,7 +98,7 @@ def launch():
 	'''
 	memory_pool = ReplayMemory(myArgs.memory_size,rng)
 	network_model = buildNetwork(myArgs.resized_height,myArgs.resized_width,myArgs.rmsp_epsilon,myArgs.rmsp_rho,myArgs.learning_rate,len(valid_actions))
-	ddqn = DDQN(network_model,valid_actions)
+	ddqn = DDQN(network_model,valid_actions,myArgs.target_nn_update_frequency,myArgs.discount)
 	agent = Agent(myArgs,ddqn,memory_pool,valid_actions,rng)
 	train_agent = TrainMyAgent(myArgs,ale,agent,valid_actions,rng)
 	train_agent.run()

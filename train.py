@@ -38,8 +38,8 @@ class TrainMyAgent:
 		num_steps_left = num_steps
 		self.trainable = trainable
 		while num_steps_left > 0:
-			t = "training" if trainable else "testing"
-			info = t+ " on epoch "+str(epoch)+" and "+str(num_steps_left)+" steps left"
+			pre = "training" if trainable else "testing"
+			info = pre + " on epoch "+str(epoch)+" and "+str(num_steps_left)+" steps left"
 			logging.info(info)
 			_,steps = self.run_episode(num_steps_left,trainable)
 			num_steps_left -= steps

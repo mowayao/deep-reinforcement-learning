@@ -35,14 +35,14 @@ class Agent:
 			self.epsilon_decay_rate = (self.epsilon_start-self.epsilon_min)/self.epsilon_decay 
 		file_id = str(uuid.uuid4())
 		self.training_file_path = self.exps_prefix+"training_results_"+file_id+".csv"
-		self.testing_file_path = self.exps_prefix+"testing_results_"+self.file_id+".csv"
+		self.testing_file_path = self.exps_prefix+"testing_results_"+	file_id+".csv"
 		self.open_training_result_file()
 		self.open_testing_result_file()
 		
 
 	def open_testing_result_file(self):
 		logging.info("Open"+self.testing_file_path)
-		self.testing_result_file = open(testing_file_path,'w')
+		self.testing_result_file = open(self.testing_file_path,'w')
 		self.testing_result_file.write('epoch,num_episodes,total_reward,reward_per_episode,mean_qval\n')
 		self.testing_result_file.flush()
 
