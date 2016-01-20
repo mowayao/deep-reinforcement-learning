@@ -40,7 +40,6 @@ class DDQN:
 		self.train_cnt += 1
 		if self.train_cnt % self.target_nn_update_frequency == 0:
 			self.update()
-		#print loss[0]
 		return loss[0]
 
 	def predictAction(self,phi):
@@ -48,11 +47,10 @@ class DDQN:
 		res = self.TargetNetwork.predict(np.asarray([phi]))
 		return np.argmax(res)
 	def predictQval(self,phi):
-		#pass
 		return self.OnlineNetwork.predict(phi)
 	def update(self):
 		logging.info("update target network")
-		self.TargetNetwork = copy.deepcopy(self.OnlineNetwork)
+		self.TargetNetwork.set_weights(self.OnlineNetwork.get_weights())
 
 #TODO
 class DQN:
