@@ -38,7 +38,7 @@ class Agent:
 		self.testing_file_path = self.exps_prefix+"testing_results_"+	file_id+".csv"
 		self.open_training_result_file()
 		self.open_testing_result_file()
-		
+		self.holdout_data = None
 
 	def open_testing_result_file(self):
 		logging.info("Open"+self.testing_file_path)
@@ -151,5 +151,5 @@ class Agent:
 			for _ in xrange(self.holdout_data_size):
 				qval_sum += np.max(self.ddqn.predict(self.holdout_data[i]))
 			qval_mean = qval_sum / self.holdout_data_size
-		self.update_training_result_file(epoch,self.episode_cnt,self.test_reward,float(self.test_reward)/self.episode_cnt,qval_mean)
+			self.update_training_result_file(epoch,self.episode_cnt,self.test_reward,float(self.test_reward)/self.episode_cnt,qval_mean)
 
