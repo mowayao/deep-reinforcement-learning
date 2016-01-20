@@ -75,15 +75,15 @@ class TrainMyAgent:
 	def run_episode(self,num_steps_left,trainable):
 		self.__init_episode()
 		start_lives = self.ale.lives()
-		action = self.agent.start_episode(self.__get_phi())
+		action_idx = self.agent.start_episode(self.__get_phi())
 		step_cnt = 0
 		while True:
-			reward = self.__step(action)
+			reward = self.__step(self.valid_actions[action_idx])
 			self.flag = self.ale.lives() < start_lives  and  self.death_end_episode
 			terminal = self.ale.game_over() or self.flag
 			step_cnt += 1
 			if terminal or step_cnt > num_steps_left:
 				self.agent.finish_episode(reward,terminal,trainable)
 				break
-			action = self.agent.step(reward,self.__get_phi(),trainable)
+			action_idx = self.agent.step(reward,self.__get_phi(),trainable)
 		return terminal,step_cnt

@@ -8,9 +8,10 @@ based on keras,a python-based deep neural network framework
 '''
 
 class DDQN:
-	def __init__(self,network,valid_actions,target_nn_update_frequency,discount):
+	def __init__(self,network,valid_actions,target_nn_update_frequency,discount,phi_len):
 		#Target network chooses the action
 		#Online network eval the Q-val
+		self.phi_len = phi_len
 		self.OnlineNetwork = network
 		self.TargetNetwork = network
 		self.valid_actions = valid_actions
@@ -20,37 +21,35 @@ class DDQN:
 		self.train_cnt = 0
 	def choose_action(self,phi):
 		action_idx = self.predictAction(phi)
-		return self.valid_actions[action_idx]
+		return action_idx
 
-	def train(self,phi1,phi2,act,reward,terminals):
+	def train(self,phi1,act,reward,phi2,terminals):
 		assert phi1.shape == phi2.shape
 		n_samples = phi1.shape[0]
-		#qval1 = self.predictQval(phi1)
 		qval2 = self.predictQval(phi2)
-		Y = []
-
+		Y = self.predictQval(phi1)
 		for _ in xrange(n_samples):		
 			if terminals[_]:
-				y = reward[_]
+				for __ in xrange(self.phi_len):
+					Y[_][__] = reward[_]
 			else:
 				action_idx = self.predictAction(phi2[_])
-				y = reward[_] + self.discount*qval2[_][action_idx]
-			Y.append(y)
-		Y = np.asarray(Y)
+				Y[_][action_idx] = reward[_]+self.discount*qval2[_][action_idx]
+		
 		loss = self.OnlineNetwork.train_on_batch(phi1,Y)
 		self.train_cnt += 1
 		if self.train_cnt % self.target_nn_update_frequency == 0:
 			self.update()
-		return loss
+		#print loss[0]
+		return loss[0]
 
 	def predictAction(self,phi):
-		assert len(phi.shape)==2
-		res = self.TargetNetwork.predict(phi)
-		return np.max(res)
+		#assert len(phi.shape)==2
+		res = self.TargetNetwork.predict(np.asarray([phi]))
+		return np.argmax(res)
 	def predictQval(self,phi):
-		assert len(phi.shape)==2
+		#pass
 		return self.OnlineNetwork.predict(phi)
-
 	def update(self):
 		logging.info("update target network")
 		self.TargetNetwork = copy.deepcopy(self.OnlineNetwork)

@@ -96,27 +96,27 @@ class Agent:
 
 
 	def train_my_model(self):
-		phi,action,reward,phis,terminal = self.memory_pool.stochasticSample(self.batch_size)
-		self.ddqn.train(phi,action,reward,phis,terminal)
+		phi,action_idx,reward,phis,terminal = self.memory_pool.stochasticSample(self.batch_size)
+		return self.ddqn.train(phi,action_idx,reward,phis,terminal)
 
 	def greedy_action(self,phi,epsilon,reward):
 		assert phi.shape[0] == self.phi_len
-		self.memory_pool.add_sample(self.last_phi,self.last_action,reward,phi,False)
+		self.memory_pool.add_sample(self.last_phi,self.last_action_idx,reward,phi,False)
 		if self.rng.rand() < epsilon:
-			action = self.valid_actions[self.rng.randint(0,self.num_valid_actions)]
+			action_idx = self.rng.randint(0,self.num_valid_actions)
 		else:
-			action = self.ddqn.choose_action(phi)
-		return action
+			action_idx = self.ddqn.choose_action(phi)
+		return action_idx
 	def start_episode(self,phi):
 		self.step_cnt = 0
 		self.batch_cnt = 0
 		self.episode_reward = 0
 		self.loss = []
 		self.start_time = time.time()
-		action = self.valid_actions[self.rng.randint(self.num_valid_actions)]
-		self.last_action = action
+		action_idx = self.rng.randint(self.num_valid_actions)
+		self.last_action_idx = action_idx
 		self.last_phi = phi
-		return action
+		return action_idx
 			
 	def finish_epoch(self,epoch):
 		self.ddqn.TargetNetwork.save_weights(self.exps_prefix+"model_weight"+str(epoch)+".hdf5")
@@ -132,7 +132,7 @@ class Agent:
 				logging.info("steps:{},time:{}".format(self.step_cnt,cost_time))
 				logging.info("average loss: {:.4f} and epsilon: {:.4f}".format(mean_loss,self.epsilon))
 			if terminal:
-				self.memory_pool.add_sample(self.last_phi,self.last_action,np.clip(reward,-1,1),self.last_phi,True)
+				self.memory_pool.add_sample(self.last_phi,self.last_action_idx,np.clip(reward,-1,1),self.last_phi,True)
 		else:
 			self.episode_cnt += 1
 			self.test_reward += self.episode_reward

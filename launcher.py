@@ -98,7 +98,7 @@ def launch():
 	'''
 	memory_pool = ReplayMemory(myArgs.memory_size,rng)
 	network_model = buildNetwork(myArgs.resized_height,myArgs.resized_width,myArgs.rmsp_epsilon,myArgs.rmsp_rho,myArgs.learning_rate,len(valid_actions))
-	ddqn = DDQN(network_model,valid_actions,myArgs.target_nn_update_frequency,myArgs.discount)
+	ddqn = DDQN(network_model,valid_actions,myArgs.target_nn_update_frequency,myArgs.discount,myArgs.phi_len)
 	agent = Agent(myArgs,ddqn,memory_pool,valid_actions,rng)
 	train_agent = TrainMyAgent(myArgs,ale,agent,valid_actions,rng)
 	train_agent.run()
