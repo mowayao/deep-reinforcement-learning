@@ -58,7 +58,7 @@ class Agent:
 		self.training_result_file.flush()
 
 	def update_testing_result_file(self,epoch,num_episodes,total_reward,reward_per_episode,mean_qval):
-		res = "{},{},{},{},{}".format(epoch,num_episodes,total_reward,reward_per_episode,mean_qval)
+		res = "{},{},{},{},{}\n".format(epoch,num_episodes,total_reward,reward_per_episode,mean_qval)
 		self.testing_result_file.write(res)
 		self.testing_result_file.flush()
 
@@ -148,8 +148,9 @@ class Agent:
 			self.holdout_data = self.memory_pool.stochasticSample(self.holdout_data_size)[0]
 		qval_mean = qval_sum = 0
 		if self.holdout_data is not None:
+			predictQval = self.ddqn.predictQval(self.holdout_data)
 			for _ in xrange(self.holdout_data_size):
-				qval_sum += np.max(self.ddqn.predict(self.holdout_data[i]))
+				qval_sum += np.max(predictQval[_])
 			qval_mean = qval_sum / self.holdout_data_size
-			self.update_training_result_file(epoch,self.episode_cnt,self.test_reward,float(self.test_reward)/self.episode_cnt,qval_mean)
+			self.update_testing_result_file(epoch,self.episode_cnt,self.test_reward,float(self.test_reward)/self.episode_cnt,qval_mean)
 

@@ -7,7 +7,7 @@ import numpy as np
 import h5py
 class ReplayMemory():
 	def __init__(self,memory_size,rng):
-		self.f = h5py.File('../memory.hdf5', 'a')
+		self.f = h5py.File('../drl_memory/memory.hdf5', 'a')
 		self.curSz = 0 
 		self.MSize = memory_size
 		self.rng = rng
@@ -23,13 +23,13 @@ class ReplayMemory():
 			self.__setMemory(self.curSz,phi,action,reward,phis,terminal)
 			self.curSz+=1
 		else:
-			idx = rng.randint(0,self.MSize)
+			idx = self.rng.randint(0,self.MSize)
 			self.__setMemory(idx,phi,action,reward,phis,terminal)
 	def stochasticSample(self,batch_size):
 		expIdx = self.rng.choice(range(self.curSz),size=batch_size,replace=False)
-		phi = [self.f['phi'][idx] for idx in expIdx]
-		action = [self.f['action'][idx] for idx in expIdx]
-		reward = [self.f['reward'][idx] for idx in expIdx]
-		phis = [self.f['phis'][idx] for idx in expIdx]
-		terminal = [self.f['terminal'][idx] for idx in expIdx]
+		phi = np.asarray([self.f['phi'][idx] for idx in expIdx])
+		action = np.asarray([self.f['action'][idx] for idx in expIdx])
+		reward = np.asarray([self.f['reward'][idx] for idx in expIdx])
+		phis = np.asarray([self.f['phis'][idx] for idx in expIdx])
+		terminal = np.asarray([self.f['terminal'][idx] for idx in expIdx])
 		return phi,action,reward,phis,terminal	
